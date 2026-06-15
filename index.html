@@ -118,13 +118,33 @@ primary: {
 
 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
 
-<h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center">
+<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+<h2 class="text-lg font-bold text-slate-900 flex items-center">
 
 <svg class="w-5 h-5 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
 
 輸入中文姓名
 
 </h2>
+
+<div class="flex gap-2">
+
+<button type="button" onclick="clearNameInput()" class="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 sm:flex-none">
+
+清空
+
+</button>
+
+<button type="button" onclick="pasteNameInput()" class="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg border border-transparent bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:flex-none">
+
+貼上
+
+</button>
+
+</div>
+
+</div>
 
 <div class="space-y-3">
 
@@ -601,6 +621,64 @@ return PINYIN_DB[char][system] || char;
 // 如果沒有比對到，回傳空字串，待使用者在表格內點選編輯手動修正
 
 return "";
+
+}
+
+  
+
+// 輸入框快捷操作
+
+function clearNameInput() {
+
+const input = document.getElementById("nameInput");
+
+if (!input) return;
+
+input.value = "";
+
+input.focus();
+
+processInput();
+
+}
+
+async function pasteNameInput() {
+
+const input = document.getElementById("nameInput");
+
+if (!input) return;
+
+try {
+
+if (navigator.clipboard && window.isSecureContext) {
+
+const clipboardText = await navigator.clipboard.readText();
+
+if (clipboardText) {
+
+input.value = clipboardText.trim();
+
+input.focus();
+
+processInput();
+
+return;
+
+}
+
+}
+
+input.focus();
+
+alert("目前剪貼簿是空的，或瀏覽器不允許直接貼上。請在輸入框內長按貼上。");
+
+} catch (error) {
+
+input.focus();
+
+alert("無法直接讀取剪貼簿。請允許剪貼簿權限，或在輸入框內長按貼上。");
+
+}
 
 }
 
