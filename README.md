@@ -17,5 +17,5 @@ Open: http://127.0.0.1:8787/
 ## Notes
 
 - No backend service is required.
-- The app loads Tailwind CSS and SheetJS from public CDNs.
+- Tailwind CSS and SheetJS are vendored under `assets/` so the GitHub Pages app does not depend on third-party CDN requests at runtime.
 - Do not commit credentials, tokens, or private deployment settings into this project.
