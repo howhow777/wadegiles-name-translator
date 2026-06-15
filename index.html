@@ -18,6 +18,12 @@
 
 <script src="./assets/xlsx.full.min.js"></script>
 
+<!-- Chinese character reading + BOCA Wade-Giles mapping (vendored for offline/static use) -->
+
+<script src="./assets/pinyin-pro.js"></script>
+
+<script src="./assets/boca-wg-map.js"></script>
+
 <script>
 
 tailwind.config = {
@@ -610,7 +616,55 @@ return text;
 
 // 單字拼音轉換
 
-function convertChar(char, system) {
+function normalizePinyinKey(pinyin) {
+
+return (pinyin || "")
+
+.toLowerCase()
+
+.replace(/ü|v/g, "u")
+
+.replace(/[^a-z]/g, "");
+
+}
+
+function getHanyuSyllables(text, preferSurname = false) {
+
+if (!window.pinyinPro || typeof window.pinyinPro.pinyin !== "function") {
+
+return [];
+
+}
+
+try {
+
+return window.pinyinPro.pinyin(text, {
+
+toneType: "none",
+
+type: "array",
+
+nonZh: "removed",
+
+v: true,
+
+mode: preferSurname ? "surname" : "normal",
+
+traditional: true
+
+}).map(normalizePinyinKey).filter(Boolean);
+
+} catch (error) {
+
+console.warn("pinyin-pro conversion failed", error);
+
+return [];
+
+}
+
+}
+
+function convertChar(char, system, preferSurname = false) {
 
 if (PINYIN_DB[char]) {
 
@@ -618,9 +672,33 @@ return PINYIN_DB[char][system] || char;
 
 }
 
+const hanyuSyllables = getHanyuSyllables(char, preferSurname);
+
+if (hanyuSyllables.length === 0) {
+
 // 如果沒有比對到，回傳空字串，待使用者在表格內點選編輯手動修正
 
 return "";
+
+}
+
+if (system === "py") {
+
+return hanyuSyllables.map(syllable => syllable.toUpperCase()).join("");
+
+}
+
+const wgMap = window.BOCA_HANYU_TO_WG || {};
+
+const wgSyllables = hanyuSyllables.map(syllable => wgMap[syllable] || "");
+
+if (wgSyllables.some(syllable => !syllable)) {
+
+return "";
+
+}
+
+return wgSyllables.join("");
 
 }
 
@@ -770,7 +848,7 @@ firstNameCN = cleanName.substring(2);
 
 // 英文姓轉譯
 
-const rawLastNameEN = convertChar(lastNameCN, system);
+const rawLastNameEN = convertChar(lastNameCN, system, true);
 
 if (rawLastNameEN) hitCount++;
 
