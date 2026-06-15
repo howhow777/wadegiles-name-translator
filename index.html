@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>護照姓名中翻英轉譯器</title>
+
+<!-- Tailwind CSS -->
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- SheetJS for XLSX export -->
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+
+tailwind.config = {
+
+theme: {
+
+extend: {
+
+colors: {
+
+primary: {
+
+50: '#f0fdf4',
+
+100: '#dcfce7',
+
+500: '#22c55e',
+
+600: '#16a34a',
+
+700: '#15803d',
+
+}
+
+}
+
+}
+
+}
+
+}
+
+</script>
+
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans antialiased">
+
+  
+
+<div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
+<!-- Header -->
+
+<header class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-200 pb-5">
+
+<div>
+
+<h1 class="text-3xl font-bold text-slate-900 tracking-tight flex items-center">
+
+<svg class="w-8 h-8 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
+
+</svg>
+
+專業護照姓名中翻英轉譯器
+
+</h1>
+
+<p class="mt-2 text-sm text-slate-500">符合外交部領事事務局標準之威妥瑪拼音（Wade-Giles）與漢語拼音即時轉換系統</p>
+
+</div>
+
+<div class="mt-4 md:mt-0 flex gap-2">
+
+<button onclick="exportToXLSX()" class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+
+<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+
+匯出 Excel (.xlsx)
+
+</button>
+
+<button onclick="exportToCSV()" class="inline-flex items-center px-4 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+
+<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+
+匯出 CSV (防亂碼)
+
+</button>
+
+</div>
+
+</header>
+
+  
+
+<!-- Main Content -->
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+<!-- Sidebar: Configuration & Input -->
+
+<div class="space-y-6">
+
+<!-- Input Card -->
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+
+<h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center">
+
+<svg class="w-5 h-5 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+
+輸入中文姓名
+
+</h2>
+
+<div class="space-y-3">
+
+<label for="nameInput" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">每行輸入一個姓名（或空白、逗號隔開）</label>
+
+<textarea id="nameInput" rows="6" class="w-full rounded-lg border-slate-300 focus:border-primary-500 focus:ring focus:ring-primary-100 transition-all text-base p-3 border resize-none" placeholder="例如：&#10;陳依婷&#10;陳建亭&#10;林辰熙">陳依婷&#10;陳建亭&#10;林辰熙</textarea>
+
+<button onclick="processInput()" class="w-full py-2.5 bg-slate-900 text-white rounded-lg font-semibold hover:bg-slate-800 transition-all text-sm shadow-sm">
+
+即時轉譯與解析
+
+</button>
+
+</div>
+
+</div>
+
+  
+
+<!-- Settings Card -->
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+
+<h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center">
+
+<svg class="w-5 h-5 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+
+轉譯格式設定
+
+</h2>
+
+<div class="space-y-4 text-sm">
+
+<!-- Pinyin System -->
+
+<div>
+
+<label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">拼音系統選擇</label>
+
+<select id="pinyinSystem" onchange="processInput()" class="w-full rounded-lg border border-slate-300 py-2 px-3 focus:outline-none focus:ring focus:ring-primary-100">
+
+<option value="wg">威妥瑪拼音 (Wade-Giles - 台灣護照主流)</option>
+
+<option value="py">漢語拼音 (Hanyu Pinyin)</option>
+
+</select>
+
+</div>
+
+  
+
+<!-- Letter Case -->
+
+<div>
+
+<label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">英文大小寫</label>
+
+<select id="caseFormat" onchange="processInput()" class="w-full rounded-lg border border-slate-300 py-2 px-3 focus:outline-none focus:ring focus:ring-primary-100">
+
+<option value="upper">全部大寫 (EXAMPLE)</option>
+
+<option value="title">字首大寫 (Example)</option>
+
+<option value="lower">全部小寫 (example)</option>
+
+</select>
+
+</div>
+
+  
+
+<!-- Name Separator -->
+
+<div>
+
+<label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">名連字號形式</label>
+
+<select id="nameSeparator" onchange="processInput()" class="w-full rounded-lg border border-slate-300 py-2 px-3 focus:outline-none focus:ring focus:ring-primary-100">
+
+<option value="hyphen">橫線分隔 (I-TING)</option>
+
+<option value="space">空白分隔 (I TING)</option>
+
+<option value="none">不分隔 (ITING)</option>
+
+</select>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+  
+
+<!-- Main Panel: Results Grid -->
+
+<div class="lg:col-span-2 space-y-6">
+
+<!-- Quick Stats -->
+
+<div class="grid grid-cols-3 gap-4">
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+
+<p class="text-xs font-medium text-slate-400 uppercase tracking-wider">處理總人數</p>
+
+<p id="statTotal" class="text-2xl font-bold text-slate-950 mt-1">3</p>
+
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+
+<p class="text-xs font-medium text-slate-400 uppercase tracking-wider">精確比對率</p>
+
+<p id="statSuccess" class="text-2xl font-bold text-slate-950 mt-1">100%</p>
+
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+
+<p class="text-xs font-medium text-slate-400 uppercase tracking-wider">手動修正紀錄</p>
+
+<p id="statEdited" class="text-2xl font-bold text-slate-950 mt-1">0</p>
+
+</div>
+
+</div>
+
+  
+
+<!-- Table Card -->
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+
+<div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+
+<h3 class="font-bold text-slate-900">對照表清單</h3>
+
+<span class="text-xs text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full font-medium flex items-center">
+
+<svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+
+雙擊儲存格可進行手動微調
+
+</span>
+
+</div>
+
+<div class="overflow-x-auto">
+
+<table class="w-full text-sm text-left">
+
+<thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase text-xs tracking-wider">
+
+<tr>
+
+<th class="py-3 px-4 w-12 text-center">序號</th>
+
+<th class="py-3 px-4">中文姓名</th>
+
+<th class="py-3 px-4 w-16">中文姓</th>
+
+<th class="py-3 px-4 w-20">中文名</th>
+
+<th class="py-3 px-4">英文名 (Given Name)</th>
+
+<th class="py-3 px-4">英文姓 (Surname)</th>
+
+</tr>
+
+</thead>
+
+<tbody id="resultBody" class="divide-y divide-slate-150">
+
+<!-- JS Inject -->
+
+</tbody>
+
+</table>
+
+</div>
+
+<div id="noDataState" class="hidden p-12 text-center">
+
+<svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+
+<p class="text-slate-400">目前沒有轉換資料，請輸入姓名</p>
+
+</div>
+
+</div>
+
+</div>
+
+  
+
+</div>
+
+</div>
+
+  
+
+<!-- Custom Global Notification System -->
+
+<div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center z-50">
+
+<span id="toastText">訊息</span>
+
+</div>
+
+  
+
+<script>
+
+// 預設中文姓名與拼音對照庫
+
+const PINYIN_DB = {
+
+// 姓氏
+
+"陳": { wg: "CHEN", py: "CHEN" },
+
+"林": { wg: "LIN", py: "LIN" },
+
+"黃": { wg: "HUANG", py: "HUANG" },
+
+"張": { wg: "CHANG", py: "ZHANG" },
+
+"李": { wg: "LEE", py: "LI" },
+
+"王": { wg: "WANG", py: "WANG" },
+
+"吳": { wg: "WU", py: "WU" },
+
+"劉": { wg: "LIU", py: "LIU" },
+
+"蔡": { wg: "TSAI", py: "CAI" },
+
+"楊": { wg: "YANG", py: "YANG" },
+
+"許": { wg: "HSU", py: "XU" },
+
+"鄭": { wg: "CHENG", py: "ZHENG" },
+
+"謝": { wg: "HSIEH", py: "XIE" },
+
+"洪": { wg: "HUNG", py: "HONG" },
+
+"郭": { wg: "KUO", py: "GUO" },
+
+"邱": { wg: "CHIU", py: "QIU" },
+
+"曾": { wg: "TSENG", py: "ZENG" },
+
+"廖": { wg: "LIAO", py: "LIAO" },
+
+"賴": { wg: "LAI", py: "LAI" },
+
+"徐": { wg: "HSU", py: "XU" },
+
+"周": { wg: "CHOU", py: "ZHOU" },
+
+"葉": { wg: "YEH", py: "YE" },
+
+"莊": { wg: "CHUANG", py: "ZHUANG" },
+
+// 常用名字單字
+
+"依": { wg: "I", py: "YI" },
+
+"婷": { wg: "TING", py: "TING" },
+
+"建": { wg: "CHIEN", py: "JIAN" },
+
+"亭": { wg: "TING", py: "TING" },
+
+"辰": { wg: "CHEN", py: "CHEN" },
+
+"熙": { wg: "HSI", py: "XI" },
+
+"雅": { wg: "YA", py: "YA" },
+
+"冠": { wg: "KUAN", py: "GUAN" },
+
+"宇": { wg: "YU", py: "YU" },
+
+"翔": { wg: "HSIANG", py: "XIANG" },
+
+"家": { wg: "CHIA", py: "JIA" },
+
+"豪": { wg: "HAO", py: "HAO" },
+
+"怡": { wg: "I", py: "YI" },
+
+"君": { wg: "CHUN", py: "JUN" },
+
+"欣": { wg: "HSIN", py: "XIN" },
+
+"妤": { wg: "YU", py: "YU" },
+
+"琪": { wg: "CHI", py: "QI" },
+
+"涵": { wg: "HAN", py: "HAN" },
+
+"佳": { wg: "CHIA", py: "JIA" },
+
+"瑩": { wg: "YING", py: "YING" },
+
+"萱": { wg: "HSUAN", py: "XUAN" },
+
+"筑": { wg: "CHU", py: "ZHU" },
+
+"芯": { wg: "HSIN", py: "XIN" },
+
+"晴": { wg: "CHING", py: "QING" },
+
+"恩": { wg: "EN", py: "EN" },
+
+"承": { wg: "CHENG", py: "CHENG" },
+
+"翰": { wg: "HAN", py: "HAN" },
+
+"傑": { wg: "CHIEH", py: "JIE" },
+
+"睿": { wg: "JUI", py: "RUI" },
+
+"哲": { wg: "CHE", py: "ZHE" },
+
+"軒": { wg: "HSUAN", py: "XUAN" },
+
+"宸": { wg: "CHEN", py: "CHEN" },
+
+"廷": { wg: "TING", py: "TING" },
+
+"凱": { wg: "KAI", py: "KAI" },
+
+"威": { wg: "WEI", py: "WEI" },
+
+"倫": { wg: "LUN", py: "LUN" },
+
+"瑜": { wg: "YU", py: "YU" },
+
+"靜": { wg: "CHING", py: "JING" },
+
+"雯": { wg: "WEN", py: "WEN" },
+
+"淑": { wg: "SHU", py: "SHU" },
+
+"芬": { wg: "FEN", py: "FEN" },
+
+"芳": { wg: "FANG", py: "FANG" },
+
+"美": { wg: "MEI", py: "MEI" },
+
+"玲": { wg: "LING", py: "LING" },
+
+"華": { wg: "HUA", py: "HUA" },
+
+"德": { wg: "TE", py: "DE" },
+
+"榮": { wg: "JUNG", py: "RONG" },
+
+"雄": { wg: "HSIUNG", py: "XIONG" },
+
+"義": { wg: "I", py: "YI" },
+
+"賢": { wg: "HSIEN", py: "XIAN" },
+
+"銘": { wg: "MING", py: "MING" },
+
+"瑞": { wg: "JUI", py: "RUI" },
+
+"宗": { wg: "TSUNG", py: "ZONG" },
+
+"宏": { wg: "HUNG", py: "HONG" },
+
+"志": { wg: "CHIH", py: "ZHI" },
+
+"偉": { wg: "WEI", py: "WEI" },
+
+"明": { wg: "MING", py: "MING" },
+
+"俊": { wg: "CHUN", py: "JUN" },
+
+"瑋": { wg: "WEI", py: "WEI" },
+
+"子": { wg: "TZU", py: "ZI" },
+
+"和": { wg: "HO", py: "HE" },
+
+"平": { wg: "PING", py: "PING" },
+
+"安": { wg: "AN", py: "AN" }
+
+};
+
+  
+
+// 系統狀態
+
+let appData = [];
+
+let manuallyEditedCount = 0;
+
+  
+
+// Toast 顯示
+
+function showToast(message) {
+
+const toast = document.getElementById("toast");
+
+const text = document.getElementById("toastText");
+
+text.innerText = message;
+
+toast.classList.remove("translate-y-20", "opacity-0");
+
+toast.classList.add("translate-y-0", "opacity-100");
+
+setTimeout(() => {
+
+toast.classList.remove("translate-y-0", "opacity-100");
+
+toast.classList.add("translate-y-20", "opacity-0");
+
+}, 2500);
+
+}
+
+  
+
+// 格式化大小寫
+
+function applyCase(text, format) {
+
+if (!text) return "";
+
+if (format === "upper") return text.toUpperCase();
+
+if (format === "lower") return text.toLowerCase();
+
+if (format === "title") {
+
+return text.split('-').map(part => {
+
+if (!part) return "";
+
+return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+
+}).join('-');
+
+}
+
+return text;
+
+}
+
+  
+
+// 單字拼音轉換
+
+function convertChar(char, system) {
+
+if (PINYIN_DB[char]) {
+
+return PINYIN_DB[char][system] || char;
+
+}
+
+// 如果沒有比對到，回傳空字串，待使用者在表格內點選編輯手動修正
+
+return "";
+
+}
+
+  
+
+// 主要轉譯核心
+
+function processInput() {
+
+const text = document.getElementById("nameInput").value.trim();
+
+const system = document.getElementById("pinyinSystem").value;
+
+const caseFormat = document.getElementById("caseFormat").value;
+
+const separatorSelect = document.getElementById("nameSeparator").value;
+
+  
+
+// 連字號解析
+
+let sep = "-";
+
+if (separatorSelect === "space") sep = " ";
+
+if (separatorSelect === "none") sep = "";
+
+  
+
+if (!text) {
+
+appData = [];
+
+renderTable();
+
+updateStats();
+
+return;
+
+}
+
+  
+
+// 解析多行姓名
+
+const lines = text.split(/[\n,，\s\t]+/).filter(line => line.trim() !== "");
+
+// 姓名去重
+
+const uniqueNames = Array.from(new Set(lines));
+
+  
+
+let hitCount = 0;
+
+let totalChars = 0;
+
+  
+
+appData = uniqueNames.map((name, index) => {
+
+const cleanName = name.replace(/[^\u4e00-\u9fa5]/g, ''); // 僅保留中文字
+
+if (cleanName.length === 0) return null;
+
+  
+
+// 拆分姓與名（目前主要處理常見單姓如 陳依婷 -> 陳 / 依婷）
+
+let lastNameCN = cleanName.charAt(0);
+
+let firstNameCN = cleanName.substring(1);
+
+  
+
+// 複姓與特殊姓氏處理（如有需要）
+
+const doubleSurnames = ["司馬", "歐陽", "諸葛", "端木", "上官"];
+
+if (cleanName.length >= 3 && doubleSurnames.includes(cleanName.substring(0, 2))) {
+
+lastNameCN = cleanName.substring(0, 2);
+
+firstNameCN = cleanName.substring(2);
+
+}
+
+  
+
+// 英文姓轉譯
+
+const rawLastNameEN = convertChar(lastNameCN, system);
+
+if (rawLastNameEN) hitCount++;
+
+totalChars++;
+
+  
+
+// 英文名轉譯
+
+const nameChars = firstNameCN.split("");
+
+const rawFirstNameENArray = nameChars.map(char => {
+
+const pyChar = convertChar(char, system);
+
+if (pyChar) hitCount++;
+
+totalChars++;
+
+return pyChar || `[${char}]`; // 缺漏字標示
+
+});
+
+  
+
+// 組裝英文名連字
+
+const rawFirstNameEN = rawFirstNameENArray.join("-");
+
+  
+
+// 格式化最後大小寫及連字
+
+let lastNameEN = applyCase(rawLastNameEN, caseFormat);
+
+let firstNameEN = applyCase(rawFirstNameEN, caseFormat);
+
+  
+
+// 套用連接字元
+
+if (sep !== "-") {
+
+firstNameEN = firstNameEN.replace(/-/g, sep);
+
+}
+
+  
+
+return {
+
+id: index + 1,
+
+name: cleanName,
+
+lastNameCN: lastNameCN,
+
+firstNameCN: firstNameCN,
+
+lastNameEN: lastNameEN || `請點選修改`,
+
+firstNameEN: firstNameEN || `請點選修改`
+
+};
+
+}).filter(item => item !== null);
+
+  
+
+// 更新精確度
+
+const matchRate = totalChars > 0 ? Math.round((hitCount / totalChars) * 100) : 100;
+
+document.getElementById("statSuccess").innerText = `${matchRate}%`;
+
+  
+
+renderTable();
+
+updateStats();
+
+}
+
+  
+
+// 渲染資料表格
+
+function renderTable() {
+
+const tbody = document.getElementById("resultBody");
+
+const noDataState = document.getElementById("noDataState");
+
+tbody.innerHTML = "";
+
+  
+
+if (appData.length === 0) {
+
+noDataState.classList.remove("hidden");
+
+return;
+
+} else {
+
+noDataState.classList.add("hidden");
+
+}
+
+  
+
+appData.forEach(item => {
+
+const row = document.createElement("tr");
+
+row.className = "hover:bg-slate-50 transition-colors";
+
+// 是否含有缺失值的警示樣式
+
+const missingENName = item.firstNameEN.includes("[");
+
+const missingENLast = item.lastNameEN === "請點選修改";
+
+  
+
+row.innerHTML = `
+
+<td class="py-3 px-4 text-center font-medium text-slate-400">${item.id}</td>
+
+<td class="py-3 px-4 font-bold text-slate-950">${item.name}</td>
+
+<td class="py-3 px-4 text-slate-600">${item.lastNameCN}</td>
+
+<td class="py-3 px-4 text-slate-600">${item.firstNameCN}</td>
+
+<td class="py-3 px-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group" title="點擊直接修改" onclick="makeEditable(this, ${item.id}, 'firstNameEN')">
+
+<span class="inline-flex items-center ${missingENName ? 'text-amber-600 bg-amber-50 px-2 rounded' : 'text-slate-900'}">
+
+<span class="cell-text">${item.firstNameEN}</span>
+
+<svg class="w-3 h-3 ml-2 text-slate-300 group-hover:text-slate-500 opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+
+</span>
+
+</td>
+
+<td class="py-3 px-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group" title="點擊直接修改" onclick="makeEditable(this, ${item.id}, 'lastNameEN')">
+
+<span class="inline-flex items-center ${missingENLast ? 'text-amber-600 bg-amber-50 px-2 rounded' : 'text-slate-900'}">
+
+<span class="cell-text">${item.lastNameEN}</span>
+
+<svg class="w-3 h-3 ml-2 text-slate-300 group-hover:text-slate-500 opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+
+</span>
+
+</td>
+
+`;
+
+tbody.appendChild(row);
+
+});
+
+}
+
+  
+
+// 變更為編輯狀態
+
+function makeEditable(element, id, field) {
+
+if (element.querySelector('input')) return; // 避免重疊觸發
+
+const cellTextEl = element.querySelector('.cell-text');
+
+const currentText = cellTextEl.innerText;
+
+element.innerHTML = "";
+
+  
+
+const input = document.createElement("input");
+
+input.type = "text";
+
+input.value = currentText.includes("請點選修改") ? "" : currentText;
+
+input.className = "w-full bg-white border border-primary-500 rounded px-2 py-1 text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary-500 font-medium";
+
+element.appendChild(input);
+
+input.focus();
+
+  
+
+const saveChanges = () => {
+
+const newText = input.value.trim().toUpperCase(); // 預設強制在編輯後轉換為最主流的大寫
+
+// 更新狀態
+
+const record = appData.find(item => item.id === id);
+
+if (record && record[field] !== newText && newText !== "") {
+
+record[field] = newText;
+
+manuallyEditedCount++;
+
+showToast(`已更新 序號 ${id} 的英文對照`);
+
+}
+
+  
+
+// 重新渲染
+
+renderTable();
+
+updateStats();
+
+};
+
+  
+
+// 事件監聽
+
+input.addEventListener("blur", saveChanges);
+
+input.addEventListener("keydown", (e) => {
+
+if (e.key === "Enter") saveChanges();
+
+if (e.key === "Escape") {
+
+input.removeEventListener("blur", saveChanges);
+
+renderTable();
+
+}
+
+});
+
+}
+
+  
+
+// 更新儀表板統計
+
+function updateStats() {
+
+document.getElementById("statTotal").innerText = appData.length;
+
+document.getElementById("statEdited").innerText = manuallyEditedCount;
+
+}
+
+  
+
+// 匯出 CSV 檔案
+
+function exportToCSV() {
+
+if (appData.length === 0) {
+
+showToast("目前無任何姓名資料可匯出！");
+
+return;
+
+}
+
+  
+
+const headers = ["序號", "中文姓名", "中文姓", "中文名", "英文名", "英文姓"];
+
+let csvContent = "\uFEFF"; // 關鍵：UTF-8 BOM 防 Excel 亂碼
+
+csvContent += headers.join(",") + "\r\n";
+
+appData.forEach(item => {
+
+let row = [
+
+item.id,
+
+`"${item.name}"`,
+
+`"${item.lastNameCN}"`,
+
+`"${item.firstNameCN}"`,
+
+`"${item.firstNameEN}"`,
+
+`"${item.lastNameEN}"`
+
+];
+
+csvContent += row.join(",") + "\r\n";
+
+});
+
+  
+
+const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+const link = document.createElement("a");
+
+const url = URL.createObjectURL(blob);
+
+link.setAttribute("href", url);
+
+link.setAttribute("download", `護照姓名拼音對照表_${getFormattedDate()}.csv`);
+
+link.style.visibility = 'hidden';
+
+document.body.appendChild(link);
+
+link.click();
+
+document.body.removeChild(link);
+
+showToast("CSV 匯出成功！");
+
+}
+
+  
+
+// 匯出 XLSX 檔案
+
+function exportToXLSX() {
+
+if (appData.length === 0) {
+
+showToast("目前無任何姓名資料可匯出！");
+
+return;
+
+}
+
+  
+
+// 轉換為符合 SheetJS 的格式
+
+const tableData = appData.map(item => ({
+
+"序號": item.id,
+
+"中文姓名": item.name,
+
+"中文姓": item.lastNameCN,
+
+"中文名": item.firstNameCN,
+
+"英文名 (Given Name)": item.firstNameEN,
+
+"英文姓 (Surname)": item.lastNameEN
+
+}));
+
+  
+
+const worksheet = XLSX.utils.json_to_sheet(tableData);
+
+const workbook = XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(workbook, worksheet, "姓名對照表");
+
+// 匯出檔案
+
+XLSX.writeFile(workbook, `護照姓名拼音對照表_${getFormattedDate()}.xlsx`);
+
+showToast("Excel XLSX 匯出成功！");
+
+}
+
+  
+
+// 取得時間戳
+
+function getFormattedDate() {
+
+const d = new Date();
+
+return `${d.getFullYear()}${(d.getMonth()+1).toString().padStart(2, '0')}${d.getDate().toString().padStart(2, '0')}`;
+
+}
+
+  
+
+// 初始化載入
+
+window.onload = function() {
+
+processInput();
+
+}
+
+</script>
+
+  
+
+</body>
+
+</html>
